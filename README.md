@@ -1,0 +1,2 @@
+# borader
+bot trader stonks++
