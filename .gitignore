@@ -4,3 +4,5 @@ log.txt
 .venv
 env/
 venv/
+__pycache__/
+config.py
