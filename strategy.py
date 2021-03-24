@@ -21,13 +21,8 @@ Basic strategies:
   	-Stock should be (10-15)% of user portfolio
 
 '''
-import pandas
-import datetime
-import pytz
-import os
-import time
 
-minutes = 240
+"""minutes = 240
 
 def get_curr_date():
 	my_timestamp = datetime.datetime.now()
@@ -83,7 +78,36 @@ for i in range(2, len(list_data), 1):
 print(price_moved)
 print(day_high_price)
 print(day_low_price)
-print(len(list_data))
+print(len(list_data))"""
+
+import pandas
+import datetime
+import pytz
+import os
+import time
+import mysql.connector as mysql
+
+db = mysql.connect(
+    host = "localhost",
+    user = "root",
+    passwd = "Asdf123er!",
+    database = "borader"
+)
+
+cursor = db.cursor()
+
+query = "SELECT * from myFinalTable"
+
+cursor.execute(query)
+data = cursor.fetchall()
+for d in data:
+	print(str(d))
+	print()
+
+"""cursor.execute("SHOW DATABASES")
+databases = cursor.fetchall()
+print(databases)"""
+
 
 
 
