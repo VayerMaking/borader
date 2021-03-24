@@ -86,6 +86,7 @@ import pytz
 import os
 import time
 import mysql.connector as mysql
+import matplotlib.pyplot as plt
 
 def get_curr_date():
 	my_timestamp = datetime.datetime.now()
@@ -98,6 +99,19 @@ def get_curr_date():
 
 	return new_timezone_timestamp.strftime("%Y, %-m, %-d, %-H, %-M")
 
+
+def convert_to_dataframe(data: list):
+	dataframe = pandas.DataFrame(data)
+	dataframe.transpose()
+
+	dataframe.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+	dataframe['datetime'] = dataframe.timestamp.apply(
+	    lambda x: pandas.to_datetime(datetime.fromtimestamp(x / 1000).strftime('%c'))
+	)
+
+	dataframe.set_index('datetime', inplace=True, drop=True)
+	dataframe.drop('timestamp', axis=1, inplace=True)
+	return dataframe
 
 print(get_curr_date())
 
@@ -114,13 +128,25 @@ query = "SELECT * from myFinalTable"
 
 cursor.execute(query)
 data = cursor.fetchall()
-"""for d in data:
-	print(str(d))
-	print()
+close_price = []
+for d in data:
+	close_price.append(d[4])
 
+#print(convert_to_dataframe(data))
+print(type(data[0]))
+
+plt.plot(close_price)
+plt.show()
+"""
 cursor.execute("SHOW DATABASES")
 databases = cursor.fetchall()
 print(databases)"""
+
+
+"""
+First strategy that I am gona use is 20MA crossing 5MA. This strategy is the simplest one
+For strategy you should use this: https://github.com/CryptoSignal/Crypto-Signal
+"""
 
 
 
