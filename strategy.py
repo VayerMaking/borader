@@ -87,6 +87,20 @@ import os
 import time
 import mysql.connector as mysql
 
+def get_curr_date():
+	my_timestamp = datetime.datetime.now()
+
+	old_timezone = pytz.timezone("EET")
+	new_timezone = pytz.timezone("US/Eastern")
+
+	localized_timestamp = old_timezone.localize(my_timestamp)
+	new_timezone_timestamp = localized_timestamp.astimezone(new_timezone)
+
+	return new_timezone_timestamp.strftime("%Y, %-m, %-d, %-H, %-M")
+
+
+print(get_curr_date())
+
 db = mysql.connect(
     host = "localhost",
     user = "root",
@@ -100,11 +114,11 @@ query = "SELECT * from myFinalTable"
 
 cursor.execute(query)
 data = cursor.fetchall()
-for d in data:
+"""for d in data:
 	print(str(d))
 	print()
 
-"""cursor.execute("SHOW DATABASES")
+cursor.execute("SHOW DATABASES")
 databases = cursor.fetchall()
 print(databases)"""
 
