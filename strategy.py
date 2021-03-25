@@ -100,7 +100,7 @@ def get_curr_date():
 	return new_timezone_timestamp.strftime("%Y, %-m, %-d, %-H, %-M")
 
 
-def convert_to_dataframe(data: list):
+"""def convert_to_dataframe(data: list):
 	dataframe = pandas.DataFrame(data)
 	dataframe.transpose()
 
@@ -136,7 +136,18 @@ for d in data:
 print(type(data[0]))
 
 plt.plot(close_price)
-plt.show()
+plt.show()"""
+
+def get_x_ticks(date):
+	prev_date = datetime.datetime(2021, 3, 24, 15, 49)
+	#loop through df and then find index of prev date
+	# sum_time = prev_date.index - date.index
+	# i need 5 portions 
+	#sum_time / 2 = tick
+	# for i in range(5):
+	# result.append(df.loc[prev_date.index + tick * i] ['timestamp'])
+	# - | - | - | - | -
+
 """
 cursor.execute("SHOW DATABASES")
 databases = cursor.fetchall()
