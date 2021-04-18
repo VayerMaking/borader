@@ -20,7 +20,9 @@ class myFinalTable(Base):
      dividends = Column('Dividends', Integer)
      stock_splits = Column('Stock Splits', Integer)
 
-engine = create_engine('mysql+pymysql://root:Asdf123er!@localhost:3306/borader')
+
+engine = create_engine('mysql+pymysql://root:vayertues@localhost:3306/borader')
+
 class myFinalTable(Base):
     __table__ = Table('myFinalTable', Base.metadata,
                     autoload=True, autoload_with=engine)
@@ -32,6 +34,7 @@ session = Session(engine)
 Base.prepare(engine, reflect=True)
 
 res = session.query(myFinalTable).first()
+
 #print(res.Volume)
 
 doge = yf.Ticker("DOGE-USD")
@@ -39,7 +42,9 @@ tesla = yf.Ticker("TSLA")
 
 dh =  doge.history(period="1d", interval="1m")
 
-th = tesla.history(period="7d", interval="1m")
+
+th = tesla.history(period="1d", interval="1m", start=datetime.now().date())
+
 
 th.to_sql('asdf', con=engine, if_exists='append')
 
@@ -53,4 +58,11 @@ with engine.begin() as cn:
 
    cn.execute(sql)
 
+# asdf = Product("The Bourne Identity", True, 100, 99.99)
+#
+# session.add(asdf)
+
+# 10 - commit and close session
+# session.commit()
+# session.close()
 
