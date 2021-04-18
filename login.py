@@ -1,18 +1,29 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import config
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 options = Options()
-options.headless = False
+options.headless = True
 options.add_argument("--window-size=1920,1200")
 driver = webdriver.Chrome(options=options, executable_path=config.driver_path)
 
 URL = "https://www.etoro.com/login"
 def site_login():
+
+	username = "Borader"
+	password = "Reqreqreq03"
+
 	driver.get(URL)
 	#TODO
 	'''
-	Patherns in function find_element_by_xpath are not found.
+	Patherns in function find_element_by_xpath are not found. Sad. Searched in stack Overflow but didn't found anything
+
+	Etoro is bloccking remote controlled browsers
 	'''
 	username = driver.find_element_by_name("username")
 	username.clear()
