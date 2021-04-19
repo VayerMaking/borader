@@ -87,6 +87,9 @@ import os
 import time
 import mysql.connector as mysql
 import matplotlib.pyplot as plt
+import config
+import psycopg2
+from sqlalchemy import create_engine
 
 def get_curr_date():
 	my_timestamp = datetime.datetime.now()
@@ -115,28 +118,26 @@ def convert_to_dataframe(data: list):
 
 print(get_curr_date())
 
-db = mysql.connect(
-    host = "localhost",
-    user = "root",
-    passwd = "Asdf123er!",
-    database = "borader"
-)
+def analyze():
+	engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
+	engine = create_engine(engine_str)
 
-cursor = db.cursor()
+	with engine.begin() as cn:
+		sql = """SELECT * from myfinaltable"""
 
-query = "SELECT * from myFinalTable"
+		data = cn.execute(sql).fetchall()
 
-cursor.execute(query)
-data = cursor.fetchall()
-close_price = []
-for d in data:
-	close_price.append(d[4])
+		#data = cn.fetchall()
+	close_price = []
+	for d in data:
+		close_price.append(d[4])
 
-#print(convert_to_dataframe(data))
-print(type(data[0]))
+	#print(convert_to_dataframe(data))
+	#print(type(data[0]))
 
-plt.plot(close_price)
-plt.show()
+	plt.plot(close_price)
+	plt.show()
+
 """
 cursor.execute("SHOW DATABASES")
 databases = cursor.fetchall()
@@ -147,8 +148,3 @@ print(databases)"""
 First strategy that I am gona use is 20MA crossing 5MA. This strategy is the simplest one
 For strategy you should use this: https://github.com/CryptoSignal/Crypto-Signal
 """
-
-
-
-
-
