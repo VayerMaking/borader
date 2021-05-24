@@ -8,7 +8,10 @@ from sqlalchemy import Column, String, Integer, DateTime, Boolean, Numeric, Meta
 from sqlalchemy.ext.automap import automap_base
 from multiprocessing import Process # for threading
 import strategy #strategy.py
+import strategy_2
+from web_ui import web_server
 import config # config module with usernames and passes
+import os
 
 Base = automap_base()
 
@@ -52,6 +55,7 @@ def get_data_to_db():
         yesterday = today - timedelta(1)
         print(today)
         print(yesterday)
+        #th = tesla.history(start=today, end=today, interval="1m")
         th = tesla.history(start=yesterday, end=today, interval="1m")
         #th = tesla.history(period="1d", interval="1m")#, start=datetime.now().date())
         #th = tesla.history(start= datetime.now() - past_time, end=datetime.now(), interval="1m")
@@ -73,9 +77,15 @@ def get_data_to_db():
 
         print("completed a full cycle")
         time.sleep(10)
+
 def analyze_data():
     while True:
-        strategy.analyze()
+        strategy_2.print_results_from_strategy(10)
+        strategy_2.display()
+
+def start_server():
+    web_server.server_run()
+    #os.system('python web_ui/web_server.py')
 
 
 if __name__=='__main__':
@@ -83,10 +93,6 @@ if __name__=='__main__':
     p1.start()
     p2 = Process(target = analyze_data)
     p2.start()
-# asdf = Product("The Bourne Identity", True, 100, 99.99)
-#
-# session.add(asdf)
-
-# 10 - commit and close session
-# session.commit()
-# session.close()
+    p3 = Process(target = start_server)
+    p3.start()
+    #print(web_server.web_ui_settings)
