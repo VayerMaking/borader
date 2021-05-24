@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Borader Web UI</title>
+	<!-- <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}"> -->
+
+</head>
+<body>
+	<h1>Borader Web UI</h1>
+	<div>Settings:
+		<form action="{{ url_for('index') }}" method="POST">
+			<input type="text" name="setting1">
+      <input type = "text" name = "setting2">
+			<input type="submit" value="Save" class="button">
+		</form>
+	</div>
+  <div>
+    <h1>Current settings</h1>
+    <p>{{ web_ui_settings.setting1 }}</p>
+		<p>{{ web_ui_settings.setting2 }}</p><br>
+  </div>
+	<div>
+		<img src='static/images/chart.png'>
+	</div>
+</body>
+</html>
