@@ -39,7 +39,8 @@ tesla = yf.Ticker("TSLA")
 
 dh =  doge.history(period="1d", interval="1m")
 
-th = tesla.history(period="1mo", interval="5m")
+
+th = tesla.history(period="7d", interval="1m")
 
 th.to_sql('asdf', con=engine, if_exists='append')
 
