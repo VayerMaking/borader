@@ -72,9 +72,9 @@ def get_data_to_db():
                     WHERE NOT EXISTS
                         (SELECT 1 FROM myfinaltable f
                         WHERE t.Datetime = f.Datetime)"""
-
+            
             cn.execute(sql)
-
+            
         print("completed a full cycle")
         time.sleep(10)
 
