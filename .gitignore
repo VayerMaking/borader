@@ -1,6 +1,12 @@
 *.csv
 log.txt
+config.py
+geckodriver.log
+/__pycache__
 .env
 .venv
 env/
 venv/
+__pycache__/
+config.py
+chart.png
