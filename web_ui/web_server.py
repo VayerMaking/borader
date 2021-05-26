@@ -6,7 +6,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-web_ui_settings = {"setting1" : 1, "setting2" : 2}
+web_ui_settings = {"setting1" : 1, "setting2" : 2, "setting3" : 3}
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -15,7 +15,7 @@ def index():
         return render_template('index.html', web_ui_settings=web_ui_settings)
     elif request.method == 'POST':
         data = request.form
-        new_settings = {"setting1" : data['setting1'], "setting2" : data['setting2']}
+        new_settings = {"setting1" : data['setting1'], "setting2" : data['setting2'], "setting3" : data['setting3']}
         web_ui_settings.update(new_settings)
         return redirect(url_for('index'))
 
