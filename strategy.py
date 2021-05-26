@@ -282,22 +282,18 @@ def get_next_decition_probability(df, start_index):
     
     print(buy_sell_list)
 
-# Transforming data(list) to dataframe
-# Dataframe has more options for making trading strategies
-df = convert_to_dataframe(get_database_data())
+
+def run_script(ma_one, ma_two, portfolio_percentage):
+    df = convert_to_dataframe(get_database_data())
     
+    df1 = calculate_rsi(df)
+    df['rsi'] = convert_to_dataframe(df1, columns=['rsi'])
     
-df1 = calculate_rsi(df)
-df['rsi'] = convert_to_dataframe(df1, columns=['rsi'])
+    start_index = 100
+    ma_columns = start_strategy(df, ma_one, ma_two)
+    
+    current_money = 10000
+    
+    print_results_from_strategy(df, start_index, portfolio_percentage, current_money, "Tesla")
 
-ma_one = 150
-ma_two = 100
-start_index = 5000
-ma_columns = start_strategy(df, ma_one, ma_two)
-
-current_money = 10000
-portfolio_percentage = 40
-
-print_results_from_strategy(df, start_index, portfolio_percentage, current_money, "Tesla")
-
-display(df, ma_columns[0], ma_columns[1], start_index)
+    display(df, ma_columns[0], ma_columns[1], start_index)
