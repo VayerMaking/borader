@@ -1,15 +1,15 @@
 """
 Plan:
-	-Set strategy
-	-Backtest that strategy using old datqa from API
-	-Analizing the backtested results
-	-If the analise is ok(50%+) than usse the strategy
+    -Set strategy
+    -Backtest that strategy using old datqa from API
+    -Analizing the backtested results
+    -If the analise is ok(50%+) than usse the strategy
 
 Current API we are using - yahoo api
 Brokers:
-	-Etoro (no API)
-	-Webull (github API)
-	-Robinhood
+    -Etoro (no API)
+    -Webull (github API)
+    -Robinhood
 Basic strategies:
   -5MA crossing 20MA
   -Volume
@@ -17,8 +17,8 @@ Basic strategies:
   -News
 
   Buying and selling stock:
-  	-Selling stock at 1-2% win and (???) loss
-  	-Stock should be (10-15)% of user portfolio
+      -Selling stock at 1-2% win and (???) loss
+      -Stock should be (10-15)% of user portfolio
 
 cursor.execute("SHOW DATABASES")
 databases = cursor.fetchall()
@@ -50,13 +50,10 @@ df1 = calculate_rsi(df)
 res = []
 for d in df1:
     res.append(d)
-    
+
 df['rsi'] = convert_to_dataframe(res, columns=['rsi'])
 start_index = 50
 res = print_results_from_strategy(df, start_index, "Tesla")
 
 try:
    thread.start_new_thread( print_time, ("Thread-1", 2, ) )
-   thread.start_new_thread( print_time, ("Thread-2", 4, ) )
-except:
-   print "Error: unable to start thread"
