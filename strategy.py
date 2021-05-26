@@ -6,6 +6,9 @@ import time
 import mysql.connector as mysql
 import matplotlib.pyplot as plt
 import numpy as np
+import config
+import psycopg2
+from sqlalchemy import create_engine
 
 
 
@@ -21,20 +24,20 @@ def calculate_rsi(dataframe, window_length=14):
     close = dataframe['close']
     delta = close.diff()
     # Get rid of the first row, which is NaN
-    delta = delta[1:] 
+    delta = delta[1:]
     #print(delta)
     up, down = delta.copy(), delta.copy()
     up[up < 0] = 0
     down[down > 0] = 0
-    
+
     # Calculate the SMA
     roll_up2 = up.rolling(window_length).mean()
     roll_down2 = down.abs().rolling(window_length).mean()
-    
+
     # Calculate the RSI based on SMA
     RS = roll_up2 / roll_down2
     RSI = 100.0 - (100.0 / (1.0 + RS))
-    
+
     return RSI
 
 def add_two_moving_averages(df, first_period: int, second_period: int, moving_average_template: str):
@@ -49,32 +52,25 @@ def add_two_exponential_moving_averages(df, first_period: int, second_period: in
         df[moving_average_template+str(first_period)] = df['close'].ewm(span = first_period, adjust = False).mean()
         df[moving_average_template+str(second_period)] = df['close'].ewm(span = second_period, adjust = False).mean()
     else:
-        print("Periods for moving averages have to be more than 0") 
+        print("Periods for moving averages have to be more than 0")
 
-def get_database_data(): 
-    db = mysql.connect(
-    host = "localhost",
-    user = "root",
-    passwd = "Asdf123er!",
-    auth_plugin='mysql_native_password',
-    database = "borader"
-    )
+def get_database_data():
 
-    cursor = db.cursor()
+    engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
+    engine = create_engine(engine_str)
 
-    query = "Select * from myFinalTable"
-
-    cursor.execute(query)
-    data = cursor.fetchall()
+    with engine.begin() as cn:
+        sql = """SELECT * from myfinaltable"""
+        data = cn.execute(sql).fetchall()
     return data
 
 
 
 def make_buy_sell_strategy(df, strategy_label_one, strategy_label_two):
     #TODO Exeption if strategy_labels aren't matching
-    
-    df['signal'] = 0.0  
-    df['signal'] = np.where(df[strategy_label_one] > df[strategy_label_two], 1.0, 0.0) 
+
+    df['signal'] = 0.0
+    df['signal'] = np.where(df[strategy_label_one] > df[strategy_label_two], 1.0, 0.0)
 
     # Get the difference between element-to element
     # That way you can track when xMA is crossing yMA
@@ -90,7 +86,7 @@ def close_position(money, close_price, shares_afford, open_price, rsi, bought_or
     else:
         money -= shares_afford * (close_price * 1.01)
         print(f"Closed position at price level: {close_price}! Price range: {open_price - close_price}, RSI: {rsi}")
-    
+
     return [money, False]
 
 
@@ -100,7 +96,7 @@ def open_position(money, close_price, bought_or_sold):
         money -= shares_could_afford * (close_price * 1.01)
     else:
         money += shares_could_afford * close_price
-    
+
     return [money, close_price, True, shares_could_afford]
 
 def print_results_from_strategy(df, start_index, portfolio_percentage, current_money, ticker):
@@ -115,7 +111,7 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
     wait_sell_time = 0
     money = current_money * portfolio_percentage / 100
     shares_afford = 0
-    
+
     print(f"Starting with {money}.")
     for i in range(start_index, len(df)):
         close_price = df.loc[i]['close']
@@ -125,38 +121,38 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
                 result.append([i, df.loc[i]['close']])
             if not is_stock_bought:
                 money, price_bought, is_stock_bought, shares_afford = open_position(money, close_price, True)
-                
+
                 print(f"Bought {ticker} possition when price level: {close_price}, shares bought: {shares_afford}")
                 result.append([i, df.loc[i]['close']])
-                
+
         if df.loc[i]['position'] == -1:
             if is_stock_bought:
                 money, is_stock_bought = close_position(money, close_price, shares_afford, price_bought, df.loc[i]['rsi'], True)
                 result.append([i, df.loc[i]['close']])
-                
+
             if not is_stock_sold:
                 money, price_sold, is_stock_sold, shares_afford = open_position(money, close_price, False)
-                
+
                 print(f"Sold {ticker} position when price level: {close_price}, shares bought {shares_afford}")
                 result.append([i, df.loc[i]['close']])
 
     if is_stock_sold:
-        money, is_stock_sold = close_position(money, close_price, shares_afford, price_sold, df.loc[i]['rsi'], False) 
+        money, is_stock_sold = close_position(money, close_price, shares_afford, price_sold, df.loc[i]['rsi'], False)
     if is_stock_bought:
         money, is_stock_bought = close_position(money, close_price, shares_afford, price_bought, df.loc[i]['rsi'], True)
-        
+
     print(f"End up with {money}!!!")
-    
+
     return result
 
 def start_strategy(df, period_one, period_two):
-    #period_one = 80 # 30 for the win - EMA: 50 for the win 
+    #period_one = 80 # 30 for the win - EMA: 50 for the win
     #period_two = 180 # 60 for the win - EMA: 200 for the win
 
     moving_average_template = "EMA"
-    
+
     add_two_exponential_moving_averages(df, period_one, period_two, moving_average_template)
-    
+
     label_ma_one = moving_average_template+str(period_one)
     label_ma_two = moving_average_template+str(period_two)
 
@@ -174,19 +170,25 @@ def display(df, ma_one, ma_two, start_index):
     plt.plot(df.loc[start_index:][ma_two], 'b--', label=ma_two)
 
     # Plot buy signals
-    plt.plot(df.loc[start_index:][df.loc[start_index:]['position'] == 1].index, 
-             df.loc[start_index:][ma_one][df.loc[start_index:]['position'] == 1], 
+    plt.plot(df.loc[start_index:][df.loc[start_index:]['position'] == 1].index,
+             df.loc[start_index:][ma_one][df.loc[start_index:]['position'] == 1],
              '.', markersize = 10, color = 'g', label = 'buy')
     # Plot sell signals
-    plt.plot(df.loc[start_index:][df.loc[start_index:]['position'] == -1].index, 
-             df.loc[start_index:][ma_one][df.loc[start_index:]['position'] == -1], 
+    plt.plot(df.loc[start_index:][df.loc[start_index:]['position'] == -1].index,
+             df.loc[start_index:][ma_one][df.loc[start_index:]['position'] == -1],
              '.', markersize = 10, color = 'r', label = 'sell')
 
     plt.legend()
     plt.xlabel("date")
     plt.ylabel("$ price")
     plt.grid()
-    plt.show()
+    #plt.show()
+    if os.path.exists("web_ui/static/images/chart.png"):
+        os.remove("web_ui/static/images/chart.png")
+        print("removing chart png")
+    else:
+        print("The file does not exist")
+    plt.savefig("web_ui/static/images/chart.png")
 
 def one_ma_strategy(df, start_index, label_ma, ticker="Tesla"):
     result = {}
@@ -223,26 +225,26 @@ def print_one_ma_strategy(df, res, start_index, ticker):
             if is_stock_sold:
                 money, is_stock_sold = close_position(money, close_price, price_sold, df.loc[i]['rsi'], False)
                 result.append([i, df.loc[i]['close']])
-                
+
             if not is_stock_bought:
                 print(f"Bought {ticker} possition when price level: {close_price}, RSI: {df.loc[i]['rsi']}")
                 result.append([i, df.loc[i]['close']])
                 money, price_bought, is_stock_bought = open_position(money, close_price, True)
                 wait_buy_time = 15
-                
+
         if res[i] == -1:
             if is_stock_bought:
                 money, is_stock_bought = close_position(money, close_price, price_bought, df.loc[i]['rsi'], True)
                 result.append([i, df.loc[i]['close']])
-                
+
             if not is_stock_sold:
                 print(f"Sold {ticker} position when price level: {close_price}, RSI: {df.loc[i]['rsi']}")
                 result.append([i, df.loc[i]['close']])
                 money, price_sold, is_stock_sold = open_position(money, close_price, False)
                 wait_sell_time = 15
-                
+
                 print(f"Current money {money}")
-                
+
         if is_stock_bought and wait_buy_time < 0:
             if close_price <= price_bought:
                 money, is_stock_bought = close_position(money, close_price, price_bought, df.loc[i]['rsi'], True)
@@ -251,19 +253,19 @@ def print_one_ma_strategy(df, res, start_index, ticker):
             if close_price >= price_sold:
                 money, is_stock_sold = close_position(money, close_price, price_sold, df.loc[i]['rsi'], False)
                 result.append([i, df.loc[i]['close']])
-                
+
         wait_sell_time -= 1
         wait_buy_time -= 1
-        
-                
+
+
     if is_stock_sold:
         money, is_stock_sold = close_position(money, close_price, price_sold, df.loc[i]['rsi'], False)
-    
+
     if is_stock_bought:
         money, is_stock_bought = close_position(money, close_price, price_bought, df.loc[i]['rsi'], True)
-        
+
     print(f"End up with {money}!!!")
-    
+
     return result
 
 def get_next_decition_probability(df, start_index):
@@ -273,27 +275,27 @@ def get_next_decition_probability(df, start_index):
     for loc_index in range(start_index, end_index):
         prev_data[index] = df.loc[loc_index]['close']
         index += 1
-    
+
     sorted_data = dict([[i, v[1]] for i,v in enumerate(sorted(prev_data.items(), key=lambda prev_data: prev_data[1]))])
-    price_range = sorted_data[len(sorted_data) - 1] - sorted_data[0] 
+    price_range = sorted_data[len(sorted_data) - 1] - sorted_data[0]
     buy_sell_list = [int(v - sorted_data[len(sorted_data) - 1]) for k, v in prev_data.items()]
 
     binary_buy_sell_list = [(l - buy_sell_list[0]) for l in buy_sell_list]
-    
+
     print(buy_sell_list)
 
 
 def run_script(ma_one, ma_two, portfolio_percentage):
     df = convert_to_dataframe(get_database_data())
-    
+
     df1 = calculate_rsi(df)
     df['rsi'] = convert_to_dataframe(df1, columns=['rsi'])
-    
+
     start_index = 100
     ma_columns = start_strategy(df, ma_one, ma_two)
-    
+
     current_money = 10000
-    
+
     print_results_from_strategy(df, start_index, portfolio_percentage, current_money, "Tesla")
 
     display(df, ma_columns[0], ma_columns[1], start_index)

@@ -8,7 +8,6 @@ from sqlalchemy import Column, String, Integer, DateTime, Boolean, Numeric, Meta
 from sqlalchemy.ext.automap import automap_base
 from multiprocessing import Process # for threading
 import strategy #strategy.py
-import strategy_2
 from web_ui import web_server
 import config # config module with usernames and passes
 import os
@@ -28,6 +27,14 @@ class myfinaltable(Base):
      dividends = Column('dividends', Integer)
      stock_splits = Column('stock_splits', Integer)
 
+class web_ui_settings(Base):
+     __tablename__ = 'web_ui_settings'
+
+     id = Column('id', Numeric, primary_key=True)
+     setting1 = Column('setting1', Numeric)
+     setting2 = Column('setting2', Numeric)
+     setting3 = Column('setting3', Numeric)
+
 engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
 engine = create_engine(engine_str)
 
@@ -35,6 +42,9 @@ class myfinaltable(Base):
     __table__ = Table('myfinaltable', Base.metadata,
                     autoload=True, autoload_with=engine)
 
+class web_ui_settings(Base):
+    __table__ = Table('web_ui_settings', Base.metadata,
+                    autoload=True, autoload_with=engine)
 #session = Session(engine)
 Base.prepare(engine, reflect=True)
 #with Session(engine) as connection:
@@ -72,18 +82,32 @@ def get_data_to_db():
                     WHERE NOT EXISTS
                         (SELECT 1 FROM myfinaltable f
                         WHERE t.Datetime = f.Datetime)"""
-            
+
             cn.execute(sql)
-            
+
         print("completed a full cycle")
         time.sleep(10)
 
+def get_setting():
+    with engine.begin() as cn:
+        sql = """SELECT * FROM web_ui_settings"""
+        data = cn.execute(sql).fetchall()
+    return data
+
 def analyze_data():
     while True:
-        strategy_2.print_results_from_strategy(10)
-        strategy_2.display()
+        #print(web_server.web_ui_settings["setting1"])
+        setting = get_setting()
+        strategy.run_script(setting[0][0], setting[0][1], setting[0][2])
+        time.sleep(10)
+#
+# def create_table():
+#     with engine.begin() as cn:
+#         sql = """INSERT INTO web_ui_settings (setting1, setting2, setting3) VALUES (10, 10, 10)"""
+#         cn.execute(sql)
 
 def start_server():
+    #create_table()
     web_server.server_run()
     #os.system('python web_ui/web_server.py')
 
