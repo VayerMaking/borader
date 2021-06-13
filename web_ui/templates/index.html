@@ -10,8 +10,11 @@
 	<h1>Borader Web UI</h1>
 	<div>Settings:
 		<form action="{{ url_for('index') }}" method="POST">
-			<input type="text" name="setting1">
-      <input type = "text" name = "setting2">
+			<label for="setting1">Setting1</label>
+			<input type="text" id="setting1" name="setting1">
+			<label for="setting2">Setting2</label>
+      <input type = "text" id="setting2" name = "setting2">
+			<label for="portfolio_percentage">Portfolio %</label>
 			<select id="portfolio-percentage" name="setting3">
 				<option value="5">5%</option>
 				<option value="10">10%</option>
@@ -46,5 +49,10 @@
 	<div>
 		<img src='static/images/chart.png'>
 	</div>
+	<div>
+		<object width="300" height="300" type="text/plain" data="log.txt" border="0" >
+		</object>
+	</div>
+
 </body>
 </html>

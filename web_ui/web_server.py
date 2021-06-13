@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, request, flash, redirect, url_for, session, make_response, jsonify
+from flask import render_template, request, flash, redirect, url_for, session, make_response, jsonify, send_from_directory
 import time
 import os
 from datetime import datetime
@@ -25,6 +25,10 @@ def update_db(wus):
         #UPDATE films SET kind = 'Dramatic' WHERE kind = 'Drama';
         val = (a, b, c)
         cn.execute(sql, val)
+
+@app.route('/log.txt')
+def send_log():
+    return send_from_directory('', 'log.txt')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

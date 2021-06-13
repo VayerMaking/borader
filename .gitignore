@@ -10,3 +10,5 @@ venv/
 __pycache__/
 config.py
 chart.png
+did.bin
+start_end_log.txt

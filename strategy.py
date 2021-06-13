@@ -9,8 +9,30 @@ import numpy as np
 import config
 import psycopg2
 from sqlalchemy import create_engine
+import csv, smtplib, ssl # for emails
 
+def update_start_end_money(line):
+    with open("start_end_log.txt", "w") as start_end_log_file:
+        start_end_log_file.write(line)
 
+def log_decissions(line):
+    with open("log.txt", "a") as log:
+        log.write(line + "\n")
+
+def send_email(message):
+
+    from_address = config.from_address
+    password = config.email_pass
+    email = "martin.vayer@gmail.com"
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        server.login(from_address, password)
+        server.sendmail(
+            from_address,
+            email,
+            message,
+        )
 
 def convert_to_dataframe(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'dividends', 'stocksplits']):
     df = pandas.DataFrame(data)
@@ -82,10 +104,16 @@ def make_buy_sell_strategy(df, strategy_label_one, strategy_label_two):
 def close_position(money, close_price, shares_afford, open_price, rsi, bought_or_sold):
     if bought_or_sold:
         money += shares_afford * close_price
-        print(f"Closed position at price level: {close_price}! Price range: {close_price - open_price}, RSI: {rsi}")
+        close_possition_info = f"Closed position at price level: {close_price}! Price range: {close_price - open_price}, RSI: {rsi}"
+        print(close_possition_info)
+        log_decissions(close_possition_info)
+        #send_email(close_possition_info)
     else:
         money -= shares_afford * (close_price * 1.01)
-        print(f"Closed position at price level: {close_price}! Price range: {open_price - close_price}, RSI: {rsi}")
+        close_possition_info = f"Closed position at price level: {close_price}! Price range: {open_price - close_price}, RSI: {rsi}"
+        print(close_possition_info)
+        log_decissions(close_possition_info)
+        #send_email(close_possition_info)
 
     return [money, False]
 
@@ -111,8 +139,8 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
     wait_sell_time = 0
     money = current_money * portfolio_percentage / 100
     shares_afford = 0
-
-    print(f"Starting with {money}.")
+    start_info = f"Starting with {money}."
+    print(start_info)
     for i in range(start_index, len(df)):
         close_price = df.loc[i]['close']
         if df.loc[i]['position'] == 1:
@@ -121,8 +149,10 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
                 result.append([i, df.loc[i]['close']])
             if not is_stock_bought:
                 money, price_bought, is_stock_bought, shares_afford = open_position(money, close_price, True)
-
-                print(f"Bought {ticker} possition when price level: {close_price}, shares bought: {shares_afford}")
+                bought_info = f"Bought {ticker} possition when price level: {close_price}, shares bought: {shares_afford}"
+                print(bought_info)
+                log_decissions(bought_info)
+                #send_email(bought_info)
                 result.append([i, df.loc[i]['close']])
 
         if df.loc[i]['position'] == -1:
@@ -132,8 +162,10 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
 
             if not is_stock_sold:
                 money, price_sold, is_stock_sold, shares_afford = open_position(money, close_price, False)
-
-                print(f"Sold {ticker} position when price level: {close_price}, shares bought {shares_afford}")
+                sold_info = f"Sold {ticker} position when price level: {close_price}, shares bought {shares_afford}"
+                print(sold_info)
+                log_decissions(sold_info)
+                #send_email(sold_info)
                 result.append([i, df.loc[i]['close']])
 
     if is_stock_sold:
@@ -141,7 +173,9 @@ def print_results_from_strategy(df, start_index, portfolio_percentage, current_m
     if is_stock_bought:
         money, is_stock_bought = close_position(money, close_price, shares_afford, price_bought, df.loc[i]['rsi'], True)
 
-    print(f"End up with {money}!!!")
+    end_info = f"End up with {money}!!!"
+    print(end_info)
+    update_start_end_money(start_info + "\n" + end_info)
 
     return result
 
