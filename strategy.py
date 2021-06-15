@@ -34,7 +34,7 @@ def send_email(message):
             message,
         )
 
-def convert_to_dataframe(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'dividends', 'stocksplits']):
+def convert_to_dataframe(data, columns=['id', 'timestamp', 'open', 'high', 'low', 'close', 'volume', 'dividends', 'stocksplits', 'ticker_name']):
     df = pandas.DataFrame(data)
     df.transpose()
 
@@ -76,13 +76,13 @@ def add_two_exponential_moving_averages(df, first_period: int, second_period: in
     else:
         print("Periods for moving averages have to be more than 0")
 
-def get_database_data():
+def get_database_data(ticker_name):
 
-    engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
+    engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader_v2'
     engine = create_engine(engine_str)
 
     with engine.begin() as cn:
-        sql = """SELECT * from myfinaltable"""
+        sql = """SELECT * from myfinaltable where ticker_name = '{}'""".format(ticker_name)
         data = cn.execute(sql).fetchall()
     return data
 
@@ -319,8 +319,8 @@ def get_next_decition_probability(df, start_index):
     print(buy_sell_list)
 
 
-def run_script(ma_one, ma_two, portfolio_percentage):
-    df = convert_to_dataframe(get_database_data())
+def run_script(ma_one, ma_two, portfolio_percentage, ticker_name):
+    df = convert_to_dataframe(get_database_data(ticker_name))
 
     df1 = calculate_rsi(df)
     df['rsi'] = convert_to_dataframe(df1, columns=['rsi'])

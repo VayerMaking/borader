@@ -7,7 +7,7 @@ import psycopg2
 from sqlalchemy import create_engine
 import config
 
-engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
+engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader_v2'
 engine = create_engine(engine_str)
 
 app = Flask(__name__)

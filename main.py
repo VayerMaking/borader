@@ -26,6 +26,7 @@ class myfinaltable(Base):
      volume = Column('volume', Integer)
      dividends = Column('dividends', Integer)
      stock_splits = Column('stock_splits', Integer)
+     ticker_name  = Column('ticker_name', String(100))
 
 class web_ui_settings(Base):
      __tablename__ = 'web_ui_settings'
@@ -35,7 +36,7 @@ class web_ui_settings(Base):
      setting2 = Column('setting2', Numeric)
      setting3 = Column('setting3', Numeric)
 
-engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader'
+engine_str = 'postgresql://' + config.db_usr + ':' + config.db_pass + '@localhost/borader_v2'
 engine = create_engine(engine_str)
 
 class myfinaltable(Base):
@@ -54,39 +55,43 @@ Base.prepare(engine, reflect=True)
 #a = Base.classes.myfinaltable
 #print(res.Volume)
 
-def get_data_to_db():
-    while True:
-        doge = yf.Ticker("DOGE-USD")
-        tesla = yf.Ticker("TSLA")
+def get_data_to_db(ticker_name):
+        #doge = yf.Ticker("DOGE-USD")
+    ticker = yf.Ticker(ticker_name)
 
-        dh =  doge.history(period="1d", interval="1m")
+        #dh =  doge.history(period="1d", interval="1m")
         #past_time = timedelta(hours = 1)
-        today = datetime.now().date()
-        yesterday = today - timedelta(1)
-        print(today)
-        print(yesterday)
+    today = datetime.now().date()
+    yesterday = today - timedelta(1)
+    print(today)
+    print(yesterday)
         #th = tesla.history(start=today, end=today, interval="1m")
-        th = tesla.history(start=yesterday, end=today, interval="1m")
+    th = ticker.history(start=yesterday, end=today, interval="1m")
         #th = tesla.history(period="1d", interval="1m")#, start=datetime.now().date())
         #th = tesla.history(start= datetime.now() - past_time, end=datetime.now(), interval="1m")
-        th.reset_index(inplace=True)
-        print(th.columns)
-        th.rename(columns = {'Datetime' : 'datetime', 'Open' : 'open', 'High' : 'high', 'Low' : 'low', 'Close' : 'close', 'Volume' : 'volume', 'Dividends' : 'dividends'}, inplace = True)
-        print(th)
-        th.to_sql('asdf', con=engine, if_exists='append')
+    th.reset_index(inplace=True)
+    print(th.columns)
+    th.rename(columns = {'Datetime' : 'datetime', 'Open' : 'open', 'High' : 'high', 'Low' : 'low', 'Close' : 'close', 'Volume' : 'volume', 'Dividends' : 'dividends'}, inplace = True)
+    print(th)
+    th.to_sql('asdf', con=engine, if_exists='append')
 
-        with engine.begin() as cn:
-            sql = """INSERT INTO myfinaltable (datetime, open, high, low, close, volume, dividends)
-                    SELECT t.Datetime, t.Open, t.High, t.Low, t.Close, t.Volume, t.Dividends
+    with engine.begin() as cn:
+        sql = """INSERT INTO myfinaltable (datetime, open, high, low, close, volume, dividends, ticker_name)
+                    SELECT t.Datetime, t.Open, t.High, t.Low, t.Close, t.Volume, t.Dividends, '{}'
                     FROM asdf t
                     WHERE NOT EXISTS
                         (SELECT 1 FROM myfinaltable f
-                        WHERE t.Datetime = f.Datetime)"""
+                        WHERE t.open != f.open and t.Datetime = f.Datetime)""".format(ticker_name)
 
-            cn.execute(sql)
+        cn.execute(sql)
 
-        print("completed a full cycle")
-        time.sleep(10)
+    print("completed a full cycle")
+    time.sleep(10)
+
+def get_all_ticker_data(tickers):
+    for ticker in tickers:
+        p = Process(target = get_data_to_db(ticker))
+        p.start()
 
 def get_setting():
     with engine.begin() as cn:
@@ -94,17 +99,13 @@ def get_setting():
         data = cn.execute(sql).fetchall()
     return data
 
-def analyze_data():
-    while True:
+def analyze_data(tickers):
+    for ticker in tickers:
+        #while True:
         #print(web_server.web_ui_settings["setting1"])
         setting = get_setting()
-        strategy.run_script(setting[0][0], setting[0][1], setting[0][2])
+        strategy.run_script(setting[0][0], setting[0][1], setting[0][2], ticker)
         time.sleep(10)
-#
-# def create_table():
-#     with engine.begin() as cn:
-#         sql = """INSERT INTO web_ui_settings (setting1, setting2, setting3) VALUES (10, 10, 10)"""
-#         cn.execute(sql)
 
 def start_server():
     #create_table()
@@ -113,9 +114,10 @@ def start_server():
 
 
 if __name__=='__main__':
-    p1 = Process(target = get_data_to_db)
+    tickers = ["TSLA", "DOGE-USD"]
+    p1 = Process(target = get_all_ticker_data(tickers))
     p1.start()
-    p2 = Process(target = analyze_data)
+    p2 = Process(target = analyze_data(tickers))
     p2.start()
     p3 = Process(target = start_server)
     p3.start()

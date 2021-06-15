@@ -1,10 +1,11 @@
 create table myfinaltable(
-    Datetime timestamptz PRIMARY KEY,
+    Datetime timestamptz ,
     open float,
     high float,
     low float,
     close float,
     volume float,
     dividends float,
-    stock_splits float
+    stock_splits float,
+    ticker_name varchar PRIMARY KEY
 );
