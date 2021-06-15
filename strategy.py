@@ -10,6 +10,8 @@ import config
 import psycopg2
 from sqlalchemy import create_engine
 import csv, smtplib, ssl # for emails
+from webull import paper_webull # unofficial api for trading on webull broker
+
 
 def update_start_end_money(line):
     with open("start_end_log.txt", "w") as start_end_log_file:
@@ -18,6 +20,16 @@ def update_start_end_money(line):
 def log_decissions(line):
     with open("log.txt", "a") as log:
         log.write(line + "\n")
+
+def webbull_trading(ticker_name, price, quantity):
+    wb = paper_webull()
+    wb.login(config.wb_username, config.wb_password)
+    wb.get_trade_token('123456')
+    wb.place_order(stock=ticker_name, price=price, quant=quantity)
+    orders = wb.get_current_orders()
+    print(orders)
+    print(wb.get_portfolio())
+    print(wb.get_history_orders())
 
 def send_email(message):
 
